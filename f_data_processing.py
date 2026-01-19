@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from scipy.stats import norm
 import map_data as md
 import re
 
@@ -15,6 +17,22 @@ def rename_columns(df, col_part, replacement) -> pd.DataFrame:
     - updated DataFrame
     '''
     df.rename(columns=lambda x: x.replace(col_part, replacement), inplace=True)
+    return df
+
+def invert_likert(df, cols, max_val = 6) -> pd.DataFrame:
+    '''
+    Replacing column name parts
+
+    Input:
+    - df: DataFrame
+    - col: column names to invert
+    - max_val: integer with maximum of likert scale
+
+    Returns:
+    - updated DataFrame
+    '''
+    for col in cols:
+        df[col] = (max_val + 1) - df[col]
     return df
 
 def map_cols(df, map_dict, columns=None) -> pd.DataFrame:
@@ -34,7 +52,7 @@ def map_cols(df, map_dict, columns=None) -> pd.DataFrame:
     elif isinstance(columns, list) and all(isinstance(col, str) for col in columns):
         map_columns = [c for c in columns if c in df.columns]
     else:
-        raise ValueError("Leave chosen columns empty or chose a list of colum names (list of strings).")
+        raise ValueError('Leave chosen columns empty or chose a list of colum names (list of strings).')
     
     for col in map_columns:
         df[col] = df[col].replace(map_dict)
@@ -56,7 +74,7 @@ def to_num_col(df, num_columns=None) -> pd.DataFrame:
     elif isinstance(num_columns, list) and all(isinstance(col, str) for col in num_columns):
         num_columns = [c for c in num_columns if c in df.columns]
     else:
-        raise ValueError("Leave chosen columns empty or chose a list of colum names (list of strings).")
+        raise ValueError('Leave chosen columns empty or chose a list of colum names (list of strings).')
     
     for col in num_columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -71,39 +89,39 @@ def transform_likert(df, ):
 
     for c in valid_columns:
         s = df[c].replace(md.LIKERT_MAP)
-        df[c] = s.astype("string").str.extract(r"(-?\d+\.?\d*)", expand=False)
+        df[c] = s.astype('string').str.extract(r'(-?\d+\.?\d*)', expand=False)
     to_num_col(df, valid_columns)
     return df
 
 # remove speeding and very slow respondents
 # Umbenennen von Duration(inseconds) -> duration (nach dem Spalten-Cleaning)
 def rm_speeders(df):
-    if "Duration(inseconds)" in df.columns:
-        df = rename_columns(df, "Duration(inseconds)", "duration")
+    if 'Duration(inseconds)' in df.columns:
+        df = rename_columns(df, 'Duration(inseconds)', 'duration')
 
         # Sicherstellen, dass duration numerisch ist
-        df["duration"] = pd.to_numeric(df["duration"], errors="coerce")
+        df['duration'] = pd.to_numeric(df['duration'], errors='coerce')
 
-        p5 = df["duration"].quantile(0.05)
-        p95 = df["duration"].quantile(0.95)
+        p5 = df['duration'].quantile(0.05)
+        p95 = df['duration'].quantile(0.95)
 
-        speedy_slowy = (df["duration"] > p5) & (df["duration"] < p95)
-        print('min ', min(df['duration']), ' max ', max(df['duration']))
+        speedy_slowy = (df['duration'] > p5) & (df['duration'] < p95)
+        print('Duration: min ', min(df['duration']), ' max ', max(df['duration']))
         
-        print(f'{len(df)-len(df[speedy_slowy])} respondents were faster than ({p5})s or slower than ({p95})s')
+        print(f'Fastest and slowest 10% (Total): {len(df)-len(df[speedy_slowy])} respondents (<{p5}s or >{p95}s)')
 
     else:
-        print("Duration filter already done")
+        print('Duration filter already done')
     return ~speedy_slowy
 
 # remove straightliners
 # (respondents who gave the same answer across a set of Likert-scale questions)
 def rm_straightliners(df):
     # check 
-    likert_costs_cols = [c for c in df.columns if c.startswith("likert_costs_")]
-    identity_cols = [c for c in df.columns if c.startswith("identity_group")]
-    gal_tan_cols = [c for c in df.columns if c.startswith("gal_tan_")]
-    deservingness_cols = [c for c in df.columns if c.startswith("deservingness")]
+    likert_costs_cols = [c for c in df.columns if c.startswith('likert_costs_')]
+    identity_cols = [c for c in df.columns if c.startswith('identity_group')]
+    gal_tan_cols = [c for c in df.columns if c.startswith('gal_tan_')]
+    deservingness_cols = [c for c in df.columns if c.startswith('deservingness')]
 
     straightliners_costs = df[likert_costs_cols].nunique(axis=1, dropna=True).eq(1)
     straightliners_identity = df[identity_cols].nunique(axis=1, dropna=True).eq(1)
@@ -118,37 +136,45 @@ def rm_straightliners(df):
 # IPs mit mehr als 2 verschiedenen ids
 def filter_double_ipa(df):
     shared_ips = (
-        df.groupby("IPAddress")["id"]
+        df.groupby('IPAddress')['id']
         .nunique()
-        .reset_index(name="user_count")
+        .reset_index(name='user_count')
     )
-    shared_ips = shared_ips[shared_ips["user_count"] > 2]["IPAddress"]
+    shared_ips = shared_ips[shared_ips['user_count'] > 2]['IPAddress']
 
     # Nutzer mit diesen IPs
-    users_to_remove = df[df["IPAddress"].isin(shared_ips)].copy()
+    users_to_remove = df[df['IPAddress'].isin(shared_ips)].copy()
 
     # anti_join nach id & IPAddress
     df = df.merge(
-        users_to_remove[["id", "IPAddress"]].drop_duplicates(),
-        on=["id", "IPAddress"],
-        how="left",
+        users_to_remove[['id', 'IPAddress']].drop_duplicates(),
+        on=['id', 'IPAddress'],
+        how='left',
         indicator=True,
     )
-    df = df[df["_merge"] == "left_only"].drop(columns="_merge").copy()
+    df = df[df['_merge'] == 'left_only'].drop(columns='_merge').copy()
     return df
 
 def string_mapping(df, mapping_dict, column_patterns=None, numeric=False):
     df = df.copy()
 
     if column_patterns:
-        regex = re.compile("|".join(column_patterns))
+        regex = re.compile('|'.join(column_patterns))
         cols = [c for c in df.columns if regex.search(c)]
     else:
         cols = df.columns.tolist()
 
-    # df[cols] = df[cols].astype("string").apply(lambda s: s.str.strip())
+    # df[cols] = df[cols].astype('string').apply(lambda s: s.str.strip())
     df[cols] = df[cols].replace(mapping_dict)
     if numeric:
         df = to_num_col(df, cols)
         
+    return df
+
+def tidy(df, var):
+    df = df.copy()
+    df['level_raw'] = df['index'].str.extract(rf'{var}\[(.*)\]')[0]
+    df['group'] = df['level_raw'].str.extract(r'^(costs|benefits|exemptions)_')[0]
+    df['label'] = df['level_raw'].str.replace(r'^(costs|benefits|exemptions)_', '', regex=True)
+    df['group'] = pd.Categorical(df['group'], ['costs','benefits','exemptions'], ordered=True)
     return df

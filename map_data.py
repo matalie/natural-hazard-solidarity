@@ -8,26 +8,15 @@ KEYS = pd.read_csv("../data/id_list.csv", sep=';',dtype={"NEW IDS": "Int64", "OL
 
 # Columnames that will be used and responses are in form of likert scales which can be transfored to numbers (adapted from Veronikas code in R)
 VALID_COLUMNS = [
-    "sensitivity_nh_1", "sensitivity_nh_2", "sensitivity_nh_3", # "sensitivity_nh_4",
+    "sensitivity_nh_1", "sensitivity_nh_2", "sensitivity_nh_3",
     "costs_cc_policy_1", "finan_vulnerability_1",
-    "climatechange_nh_1", "climatechange_nh_2", "climatechange_nh_3",
-    "psycho_distance_1", "psycho_distance_2", "psycho_distance_3", "psycho_distance_4",
-    "number_household_1_TEXT" #, # number like a likert
-    # "1_conjoint_acceptance_1", "1_conjoint_acceptance_2",
-    # "2_conjoint_acceptance_1", "2_conjoint_acceptance_2",
-    # "3_conjoint_acceptance_1", "3_conjoint_acceptance_2",
-    # "4_conjoint_acceptance_1", "4_conjoint_acceptance_2",
-    # "5_conjoint_acceptance_1", "5_conjoint_acceptance_2",
-    # "6_conjoint_acceptance_1", "6_conjoint_acceptance_2",
-    # "7_conjoint_acceptance_1", "7_conjoint_acceptance_2",
-    # "8_conjoint_acceptance_1", "8_conjoint_acceptance_2",
-    # "9_conjoint_acceptance_1", "9_conjoint_acceptance_2",
-    # "own_municipality_1", "own_municipality_2", "own_municipality_3", "own_municipality_4",
-    # "gal_tan_1", "gal_tan_2", "gal_tan_3", "gal_tan_4",
-    # "lreco_1", "lreco_2", "lreco_3",
-    # "env_values_1", "env_values_2", "env_values_3",
-    # "deservingness_1", "deservingness_2", "deservingness_3", "deservingness_4", "deservingness_5", "deservingness_6",
-    # "deservingness_7", "deservingness_8", "deservingness_9", "deservingness_10", "deservingness_11", "deservingness_12"    
+    "lreco_2",
+    "climatechange_nh_1", "climatechange_nh_2", "climatechange_nh_3", 
+    "psycho_distance_1", "psycho_distance_2", "psycho_distance_3", "psycho_distance_4"
+]
+
+NUM_COLUMNS = [
+    "number_household_1_TEXT"
 ]
 
 # Likert scale responses to be transfomred into a numberic value (from Veronikas code in R)
@@ -47,6 +36,19 @@ LIKERT_MAP = {
     "Prefer not to say": np.nan,
     "I don't now": np.nan,
     "7": np.nan
+}
+
+NH_EXPERIENCE_MAP = {
+    'No': 1,
+    'Yes, due to a different natural hazard such as': 0,
+    'Yes, due to flooding,Yes, due to a different natural hazard such as': 0,
+    'Yes, due to flooding': 0,
+    'Yes, due to flooding,Yes, due to a landslide,Yes, due to a different natural hazard such as': 0,
+    'Yes, due to a debris flow' 'Yes, due to a landslide': 0,
+    'Yes, due to flooding,Yes, due to a debris flow,Yes, due to a landslide': 0,
+    'Yes, due to flooding,Yes, due to a landslide': 0,
+    'Yes, due to flooding,Yes, due to a debris flow': 0,
+    'Yes, due to flooding,Yes, due to a debris flow,Yes, due to a landslide,Yes, due to a different natural hazard such as': 0,
 }
 
 # Translation mapping of the demographic replies in the survey to have a matching range as the BSF (Bundesamt für Statistik, 2024) (from Veronikas code in R)
@@ -70,12 +72,12 @@ DEMOGRAPHICS_DICT = {
     "Prefer not to say": np.nan,
     # income
     # TODO: what source?
-    "Less than CHF 50,000": "Low",
-    "CHF 50,000 - CHF 70,000": "Low",
-    "CHF 70,000 - CHF 100,000": "Mid",
-    "CHF 100,001 - CHF 150,000": "Mid",
-    "CHF 150,001 - CHF 250,000": "High",
-    "More than CHF 250,000": "High",
+    "Less than CHF 50,000": 6, # low
+    "CHF 50,000 - CHF 70,000": 5, # low
+    "CHF 70,000 - CHF 100,000": 4, # mid
+    "CHF 100,001 - CHF 150,000": 3, # mid
+    "CHF 150,001 - CHF 250,000": 2, # high
+    "More than CHF 250,000": 1, # high
     "I don't know": np.nan,
     "Prefer not to say": np.nan,
     # language
@@ -162,4 +164,8 @@ TRANSLATION_DICT = {
     "Comuni di grande valore culturale, ad esempio con edifici storici": "Culturally valuable municipalities e.g. with historic buildings",
 }
 
-preference_map = {"Option 1": 1, "Option 2": 2}
+ANONYMIZE_COLS = ['Status', 'IPAddress', 'RecipientLastName','RecipientFirstName', 'RecipientEmail'
+                , 'ExternalReference', 'LocationLatitude', 'LocationLongitude', 'consent_choice'
+                , 'DistributionChannel', 'UserLanguage', 'language', 'RecordedDate', 'ResponseId']
+
+PREFERENCE_MAP = {"Option 1": 1, "Option 2": 2}

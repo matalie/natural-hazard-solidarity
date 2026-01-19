@@ -15,6 +15,10 @@ env/
 *.key
 *.pem
 
+# Code
+/old
+/edit
+
 # Data / outputs (adjust to your project!)
 data/
 *.csv
