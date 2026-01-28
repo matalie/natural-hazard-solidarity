@@ -3,6 +3,9 @@
 # ------------------------------------------------------------------
 import pandas as pd
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib as mpl
+
 # TODO
 KEYS = pd.read_csv("../data/id_list.csv", sep=';',dtype={"NEW IDS": "Int64", "OLD IDS": "Int64"})
 
@@ -26,6 +29,7 @@ LIKERT_MAP = {
     "1 - Totally unacceptable": 1,
     "1 - Very unlikely": 1,
     "1 - Very difficult": 1,
+    "1 - Not worried at all": 1,
     "6 - Totally acceptable": 6,
     "6 - Strongly agree": 6,
     "6 - Very likely": 6,
@@ -72,12 +76,18 @@ DEMOGRAPHICS_DICT = {
     "Prefer not to say": np.nan,
     # income
     # TODO: what source?
-    "Less than CHF 50,000": 6, # low
-    "CHF 50,000 - CHF 70,000": 5, # low
-    "CHF 70,000 - CHF 100,000": 4, # mid
-    "CHF 100,001 - CHF 150,000": 3, # mid
-    "CHF 150,001 - CHF 250,000": 2, # high
-    "More than CHF 250,000": 1, # high
+    # "Less than CHF 50,000": 45000,
+    # "CHF 50,000 - CHF 70,000": 60000,
+    # "CHF 70,000 - CHF 100,000": 85000,
+    # "CHF 100,001 - CHF 150,000": 125000,
+    # "CHF 150,001 - CHF 250,000": 200000,
+    # "More than CHF 250,000": 300000,
+    "Less than CHF 50,000": 3,  #"Low",
+    "CHF 50,000 - CHF 70,000": 3, # "Low",
+    "CHF 70,000 - CHF 100,000": 2, #"Mid",
+    "CHF 100,001 - CHF 150,000": 2, #"Mid",
+    "CHF 150,001 - CHF 250,000": 1, #"High", 
+    "More than CHF 250,000": 1, #"High",
     "I don't know": np.nan,
     "Prefer not to say": np.nan,
     # language
@@ -169,3 +179,9 @@ ANONYMIZE_COLS = ['Status', 'IPAddress', 'RecipientLastName','RecipientFirstName
                 , 'DistributionChannel', 'UserLanguage', 'language', 'RecordedDate', 'ResponseId']
 
 PREFERENCE_MAP = {"Option 1": 1, "Option 2": 2}
+
+COLOR_MAP = {
+    'PRGn': mpl.colormaps['PRGn'].reversed(),
+    'seismic' : mpl.colormaps['seismic'],
+    'purple_white_green': LinearSegmentedColormap.from_list('purple_white_green', ['#008837', 'white', '#dd07c9'])
+}

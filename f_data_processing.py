@@ -4,7 +4,7 @@ from scipy.stats import norm
 import map_data as md
 import re
 
-def rename_columns(df, col_part, replacement) -> pd.DataFrame:
+def rename_columns(df:pd.DataFrame, col_part, replacement) -> pd.DataFrame:
     '''
     Replacing column name parts
 
@@ -19,7 +19,7 @@ def rename_columns(df, col_part, replacement) -> pd.DataFrame:
     df.rename(columns=lambda x: x.replace(col_part, replacement), inplace=True)
     return df
 
-def invert_likert(df, cols, max_val = 6) -> pd.DataFrame:
+def invert_likert(df:pd.DataFrame, cols, max_val = 6) -> pd.DataFrame:
     '''
     Replacing column name parts
 
@@ -35,7 +35,7 @@ def invert_likert(df, cols, max_val = 6) -> pd.DataFrame:
         df[col] = (max_val + 1) - df[col]
     return df
 
-def map_cols(df, map_dict, columns=None) -> pd.DataFrame:
+def map_cols(df:pd.DataFrame, map_dict, columns=None) -> pd.DataFrame:
     '''
     Map column values (for chocsen columns) to standard values based on a mapping dictionary.
     
@@ -59,7 +59,7 @@ def map_cols(df, map_dict, columns=None) -> pd.DataFrame:
         
     return df
 
-def to_num_col(df, num_columns=None) -> pd.DataFrame:
+def to_num_col(df:pd.DataFrame, num_columns=None) -> pd.DataFrame:
     '''
     Converts all given columns to numeric ones
     
@@ -84,7 +84,7 @@ def to_num_col(df, num_columns=None) -> pd.DataFrame:
 # 2. Transform likert-scales to numerical values
 
 # Only select named columns and map correct likert number in case for string reply
-def transform_likert(df, ):
+def transform_likert(df:pd.DataFrame ) -> pd.DataFrame:
     valid_columns = [c for c in md.VALID_COLUMNS if c in df.columns]
 
     for c in valid_columns:
@@ -95,7 +95,7 @@ def transform_likert(df, ):
 
 # remove speeding and very slow respondents
 # Umbenennen von Duration(inseconds) -> duration (nach dem Spalten-Cleaning)
-def rm_speeders(df):
+def rm_speeders(df:pd.DataFrame) -> pd.DataFrame:
     if 'Duration(inseconds)' in df.columns:
         df = rename_columns(df, 'Duration(inseconds)', 'duration')
 
@@ -116,7 +116,7 @@ def rm_speeders(df):
 
 # remove straightliners
 # (respondents who gave the same answer across a set of Likert-scale questions)
-def rm_straightliners(df):
+def rm_straightliners(df:pd.DataFrame) -> pd.DataFrame:
     # check 
     likert_costs_cols = [c for c in df.columns if c.startswith('likert_costs_')]
     identity_cols = [c for c in df.columns if c.startswith('identity_group')]
@@ -134,7 +134,7 @@ def rm_straightliners(df):
 
 # filter identical IP addresses
 # IPs mit mehr als 2 verschiedenen ids
-def filter_double_ipa(df):
+def filter_double_ipa(df:pd.DataFrame) -> pd.DataFrame:
     shared_ips = (
         df.groupby('IPAddress')['id']
         .nunique()
@@ -155,7 +155,7 @@ def filter_double_ipa(df):
     df = df[df['_merge'] == 'left_only'].drop(columns='_merge').copy()
     return df
 
-def string_mapping(df, mapping_dict, column_patterns=None, numeric=False):
+def string_mapping(df: pd.DataFrame, mapping_dict, column_patterns=None, numeric=False) -> pd.DataFrame:
     df = df.copy()
 
     if column_patterns:
@@ -171,10 +171,29 @@ def string_mapping(df, mapping_dict, column_patterns=None, numeric=False):
         
     return df
 
-def tidy(df, var):
+def tidy(df: pd.DataFrame, var) -> pd.DataFrame:
     df = df.copy()
     df['level_raw'] = df['index'].str.extract(rf'{var}\[(.*)\]')[0]
     df['group'] = df['level_raw'].str.extract(r'^(costs|benefits|exemptions)_')[0]
     df['label'] = df['level_raw'].str.replace(r'^(costs|benefits|exemptions)_', '', regex=True)
     df['group'] = pd.Categorical(df['group'], ['costs','benefits','exemptions'], ordered=True)
     return df
+
+# set baseline factor to -1 to make pre/post comparable
+def effects_code(series: pd.Series, baseline) -> pd.DataFrame:
+    levels = list(series.cat.categories)
+    nonbase = [lvl for lvl in levels if lvl != baseline]
+
+    X = np.zeros((len(series), len(nonbase)), dtype=int)
+    for j, lvl in enumerate(nonbase):
+        X[:, j] = (series.values == lvl).astype(int)
+
+    base_mask = (series.values == baseline)
+    X[base_mask, :] = -1
+
+    cols = [f"{series.name}_{lvl}" for lvl in nonbase]
+    return pd.DataFrame(X, columns=cols, index=series.index)
+
+
+
+
