@@ -95,7 +95,7 @@ def transform_likert(df:pd.DataFrame ) -> pd.DataFrame:
 
 # remove speeding and very slow respondents
 # Umbenennen von Duration(inseconds) -> duration (nach dem Spalten-Cleaning)
-def rm_speeders(df:pd.DataFrame) -> pd.DataFrame:
+def rm_speeders_slowers(df:pd.DataFrame) -> pd.DataFrame:
     if 'Duration(inseconds)' in df.columns:
         df = rename_columns(df, 'Duration(inseconds)', 'duration')
 
@@ -106,13 +106,36 @@ def rm_speeders(df:pd.DataFrame) -> pd.DataFrame:
         p95 = df['duration'].quantile(0.95)
 
         speedy_slowy = (df['duration'] > p5) & (df['duration'] < p95)
-        print('Duration: min ', min(df['duration']), ' max ', max(df['duration']))
         
         print(f'Fastest and slowest 10% (Total): {len(df)-len(df[speedy_slowy])} respondents (<{p5}s or >{p95}s)')
 
     else:
         print('Duration filter already done')
     return ~speedy_slowy
+
+# TODO: discuss how to exclude speeders
+# Umbenennen von Duration(inseconds) -> duration (nach dem Spalten-Cleaning)
+def rm_speeders_slowers_backup(df:pd.DataFrame, p5=0, p95=0) -> pd.DataFrame:
+    if 'Duration(inseconds)' in df.columns:
+        df = rename_columns(df, 'Duration(inseconds)', 'duration')
+
+        # Sicherstellen, dass duration numerisch ist
+        df['duration'] = pd.to_numeric(df['duration'], errors='coerce')
+
+        if p5 <= 0:
+            p5 = df['duration'].quantile(0.05)
+        if p95 <= 0:
+            p95 = df['duration'].quantile(0.95)
+
+        speedy_slowy = (df['duration'] > p5) & (df['duration'] < p95)
+        print('Duration: min ', min(df['duration']), ' max ', max(df['duration']))
+        
+        print(f'Fastest and slowest 10% (Total): {len(df)-len(df[speedy_slowy])} respondents (<{p5}s or >{p95}s)')
+
+    else:
+        print('Duration filter already done')
+    return (~speedy_slowy, p5, p95)
+
 
 # remove straightliners
 # (respondents who gave the same answer across a set of Likert-scale questions)

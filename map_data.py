@@ -10,8 +10,16 @@ import matplotlib as mpl
 KEYS = pd.read_csv("../data/id_list.csv", sep=';',dtype={"NEW IDS": "Int64", "OLD IDS": "Int64"})
 
 # Columnames that will be used and responses are in form of likert scales which can be transfored to numbers (adapted from Veronikas code in R)
+# VALID_COLUMNS = [
+#     "sensitivity_nh_1", "sensitivity_nh_2", "sensitivity_nh_3",
+#     "costs_cc_policy_1", "finan_vulnerability_1",
+#     "lreco_2",
+#     "climatechange_nh_1", "climatechange_nh_2", "climatechange_nh_3", 
+#     "psycho_distance_1", "psycho_distance_2", "psycho_distance_3", "psycho_distance_4"
+# ]
+
 VALID_COLUMNS = [
-    "sensitivity_nh_1", "sensitivity_nh_2", "sensitivity_nh_3",
+    "sensitivity_nh_1", "sensitivity_nh_2", "sensitivity_nh_3", "sensitivity_nh_4",
     "costs_cc_policy_1", "finan_vulnerability_1",
     "lreco_2",
     "climatechange_nh_1", "climatechange_nh_2", "climatechange_nh_3", 
